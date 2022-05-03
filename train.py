@@ -20,7 +20,7 @@ def main():
 	parser = argparse.ArgumentParser()
 	parser.add_argument("-tr", "--trainset", type=str, default=False, help="Path to data points for training")
 	parser.add_argument("-lr",  "--learning_rate", type=float, default=0.05, help="Learning rate for training")
-	parser.add_argument("-e", "--epochs", type=int, default=10000, help="Number of Epochs for training")
+	parser.add_argument("-e", "--epochs", type=int, default=1000000, help="Number of Epochs for training")
 	parser.add_argument("-v", "--verbose", help="Show verbose")
 	args = parser.parse_args()
 	
@@ -30,7 +30,7 @@ def main():
 	if args.trainset:
 		model.train(train_set=args.trainset, epochs=args.epochs, lr=args.learning_rate)
 	else:
-		print("Error, specify path to dataset for gradient descent.")
+		print("Error, specify path to dataset for gradient descent on data.")
 
 
 if __name__ == '__main__':

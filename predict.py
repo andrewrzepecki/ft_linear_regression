@@ -35,7 +35,7 @@ def main():
 	
 	# Parse args here
 	verbose = True if args.verbose else False
-	model = ft_linear_regression()
+	model = ft_linear_regression(model_path=args.weights)
 	prompt_user(model)
 
 if __name__ == '__main__':
