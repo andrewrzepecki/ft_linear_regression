@@ -1,9 +1,11 @@
+from re import I
 import sys
 import os
 import numpy as np
 import json
 import math
 import matplotlib.pyplot as plt
+import pandas as pd
 
 class	ft_linear_regression():
 
@@ -14,118 +16,126 @@ class	ft_linear_regression():
 					checkpoint = json.load(f)
 					f.close()
 				self.load_model(model=checkpoint)
-				self.trained = True
 				print(f'Model loaded from {model_path}')
 			except:
 				print("Warning: Loading Untrained Model\n - Train model with model.train([labelled_data])\n - Or specify custom weights")
 				print("Initializing weights to zero ...")
-				self.weights = [0, 0]
-				self.trained = False
-
-	def visualize_trainset(self, set):
-		plt.scatter(set.T[0], set.T[1])
-		plt.title('Price VS KMs')
-		plt.show()
-		input()
-		return 0
+				self.t0 = 0
+				self.t1 = 0
+				self.input_scaler = None
+		else:
+			self.t0 = 0
+			self.t1 = 0
+			self.input_scaler = None
 
 	def __call__(self, x=0):
-		'''
+		''' 
 			Call function to predict. Defaults x to 0 if no arguments given for value of Discremenant.
 		'''
 		return self.predict(x)
 
+	def hypothesis(self, x):
+		return self.t0 + x * self.t1
+
+	def predict(self, x):
+		x = self.scale_input(x)
+		result = self.hypothesis(x)
+		if result < 0:
+			result = 0
+		return result
+
+	def get_loss(self, x, y, t0, t1):
+		total_loss = 0
+		for i in range(len(x)):
+			total_loss += (y[i] - (t0 + x[i] * t1)) ** 2
+		return total_loss / len(x)
+	
+	def scale_input(self, x):
+		if self.input_scaler is None:
+			print("Warning! Model not trained, weights set to 0 and no input scaling...")
+			return x
+		else:
+			return (x - self.input_scaler['min']) / (self.input_scaler['max'] - self.input_scaler['min'])
+
+	def fit(self, x, y, lr):
+		gradient0 = 0
+		gradient1 = 0
+		n = len(x)
+
+		for i in range(n):
+			gradient0 += self.hypothesis(x[i]) - y[i]
+			gradient1 += (self.hypothesis(x[i]) - y[i]) * x[i]
+		t0 = self.t0 - gradient0 * (1/n) * lr
+		t1 = self.t1 - gradient1 * (1/n) * lr
+		return t0, t1
+
+	def read_data(self, path):
+		try:
+			data = pd.read_csv(path)
+			y = data['price'].values
+			x = data['km'].values
+			return x, y
+		except Exception:
+			print("Error reading data, stopping program.")
+			exit()
+	
+	def train(self, data, epochs, lr):
+		x, y = self.read_data(data)
+		self.input_scaler = {
+			'min' : x.min(),
+			'max' : x.max(),
+			'mean' : x.mean()
+		}
+		x = [self.scale_input(x) for x in x]
+		history = []
+		for epoch in range(epochs):
+			t0, t1 = self.fit(x, y, lr)
+			current_loss = self.get_loss(x, y, t0, t1)
+			print(f"Loss : {current_loss}")
+			history.append({
+				't0' : t0,
+				't1' : t1,
+				'loss' : current_loss
+			})
+			self.t0 = t0
+			self.t1 = t1
+		# Save model weights with lowest cost.
+		self.save_model(history)
+	
 	def load_model(self, model):
 		try:
-			self.weights = model['weights']
-			self.minimum = model['x_min']
-			self.maximum = model['x_max']
+			self.t0 = model['t0']
+			self.t1 = model['t1']
+			self.input_scaler = {
+				'min' : model['input_min'],
+				'max' : model['input_max'],
+				'mean' : model['input_mean']
+			}
 		except:
 			print("Error in model format, Initializing weights to zero ...")
-			self.weights = [0,0]	
+			self.t0 = 0
+			self.t1 = 0
+			self.input_scaler = None	
 
-	def save_model(self, x_min, x_max):
+	def save_model(self, history):
+		# Get best epoch
+		min_loss = history[0]['loss']
+		idx = 0
+		for i in range(1, len(history)):
+			if history[i]['loss'] < min_loss:
+				min_loss = history[i]['loss']
+				idx = i
+		self.t0 = history[idx]['t0']
+		self.t1 = history[idx]['t1']
 		model = {
-			'weights': [self.weights[0], self.weights[1]],
-			'x_min' : x_min,
-			'x_max' : x_max
+			't0': self.t0,
+			't1': self.t1,
+			'input_min' : int(self.input_scaler['min']),
+			'input_max' : int(self.input_scaler['max']),
+			'input_mean' : int(self.input_scaler['mean'])
 		}
+		print(model)
 		with open("model.json", 'w') as f:
 			json.dump(model, f)
 			f.close()
 		print("Saved model as \"model.json\".")
-
-	def predict(self, x):
-		"""
-			linear regression (equation of a flat line) = Theta0 + km * Theta1
-		"""
-		return self.weights[0] + self.normalize_x(x) * self.weights[1]
-
-	def _predict(self, x):
-		return self.weights[0] + self.weights[1] * x
-
-	def train(self, train_set=None, epochs=10000, lr=0.05):
-		self.weights = [0,0]
-		self.alpha=lr
-		dataset = np.genfromtxt(train_set, delimiter=",", skip_header=1)
-		transforms = self.visualize_trainset(dataset)
-		x = self.scale(dataset.T[0])
-		y = dataset.T[1]
-
-		## Start train loop through iterating epochs.
-		print(f"Training Model on 2X{len(x)} dataset.")
-		print(f"Alpha: {self.alpha} | Theta0: {self.weights[0]} | Theta1: {self.weights[1]} | Epochs: {epochs}")
-		self.train_loss = []
-		for epoch in range(epochs):
-			t0, t1 = self.gradient_descent(x=x, y=y, m=len(dataset))
-			print(t0, t1)
-			#self.train_loss.append(self.get_loss(self.x, self.y, len(dataset)))
-			if self.get_loss(x=x, y=y, t0=t0, t1=t1, m=len(x)) > self.get_loss(x=x, y=y,  t0=self.weights[0], t1=self.weights[1], m=len(x)):
-				print(f"Stopping training at epoch {epoch} due to avg loss increasing.")
-				break
-			self.weights = [t0, t1]
-			if epoch % int(epochs / 10) == 0:
-				print(f" --  Loss at Epoch {epoch}: {self.get_loss(x=x, y=y, t0=self.weights[0], t1=self.weights[1], m=len(x))}")
-		self.save_model(dataset.T[0].min(), dataset.T[0].max())
-		self.trained = True
-		self.plot_line(x=dataset.T[0], y=dataset.T[1])
-
-	
-	def scale(self, x):
-
-		self.minimum = x.min()
-		self.maximum = x.max()
-		return [(p - self.minimum) / (self.maximum - self.minimum) for p in x]
-		
-	
-	def normalize_x(self, x):
-		if self.trained:
-			return (x - self.minimum) / (self.maximum - self.minimum)
-		return x
-
-	#def normalize_y(self, y):
-	#	if self.trained:
-	#		return (y * (self.max_y - self.min_y)) + self.min_y
-	#	return y
-	
-	def get_loss(self, x, y, t0, t1, m):
-		total_loss = 0
-		for km, price in zip(x, y):
-			total_loss += math.sqrt((price - (t0 + t1 * km)) ** 2)
-		return total_loss / m
-	
-	def plot_line(self, x, y):
-		plt.plot([self.predict(km) for km in x])
-		plt.plot(y)
-		plt.title('Estimation of a car\'s value based on mileage.')
-		plt.show()
-	
-	def gradient_descent(self, x, y, m):
-		mse, intercept, gradient = 0, 0, 0
-		for km, price in zip(x, y):
-			error = math.sqrt((price - self._predict(km)) ** 2)
-			intercept += error
-			gradient += error * km
-		gradient = gradient / m
-		intercept = intercept / m
-		return self.weights[0] - intercept * self.alpha, self.weights[1] - gradient * self.alpha
