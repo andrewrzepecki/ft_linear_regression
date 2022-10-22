@@ -112,14 +112,3 @@ class Model():
 				if optimizer(loss):
 					print(f"Early Stopping applied, model has converged at epoch {e}")
 					break
-			
-			
-			
-	
-	'''
-	def get_loss(self, x, y, t0, t1):
-		total_loss = 0
-		for i in range(len(x)):
-			total_loss += (y[i] - (t0 + x[i] * t1)) ** 2
-		return total_loss / len(x)
-	'''
