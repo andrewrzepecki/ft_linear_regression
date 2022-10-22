@@ -20,20 +20,26 @@ try:
 	from Modules import Linear, Standardize, MODULE_MAP
 except Exception:
 	from src.Modules import Linear, Standardize, MODULE_MAP
+try:
+	from Maths import mse
+except Exception:
+	from src.Maths import mse
+
 
 LINEAR_REGRESSION_CONFIG = "linear_regression_std.cfg"
 
 class Model():
-
 	
-	def __init__(self, model_path : str = None, verbose : bool = False, config : str = LINEAR_REGRESSION_CONFIG):
+	def __init__(self, model_path : str = None, verbose : bool = False, 
+					config : str = LINEAR_REGRESSION_CONFIG, input_size : int = 1,
+					lr: float = 0.025):
 		self._modules = []
 		if model_path:
 			self.load_from_checkpoint(model_path)
 		if self._modules != []:
 			print(f'Model loaded from {model_path}')
 		else:
-			self.load_from_config(config)
+			self.load_from_config(config, lr = lr)
 			print("Loading Untrained Model\n - Train model with model.train([labelled_data])\n - Or specify a model checkpoint")
 			print("Initialed weights to zero ...")
 
@@ -54,7 +60,7 @@ class Model():
 		return self.forward(x)
 
 	
-	def load_from_config(self, path : str):
+	def load_from_config(self, path : str, lr : float = 0.025):
 		if os.path.exists(path):
 			basename = os.path.basename(path)
 			self._name_, _ = os.path.splitext(basename)
@@ -62,7 +68,8 @@ class Model():
 				modules = json.load(fd)
 				fd.close()
 			for module in modules:
-				self._modules.append(MODULE_MAP[module['key']]())
+				self._modules.append(MODULE_MAP[module['key']](dim=module['dim']))
+			self.lr = lr
 		else:
 			print("Invalid filepath to model configuration.")
 
@@ -87,17 +94,28 @@ class Model():
 			fd.close()
 	
 	
-	def fit(self, x, y, epochs=10000):
+	def fit(self, x, y, epochs=10000, optimizer = None):
 		# Fit Data Preprocessing
 		self._modules[0].fit(x.T)
 		x = np.array([self._modules[0](X) for X in x])
 		print(self._modules[0].__dict__)
 
 		# Train trainable layers
+		last_loss = None
 		for e in range(epochs):
 			for module in self._modules[1:]:
-				module.fit(x, y)
-				
+				module.fit(x, y, self.lr)
+			y_pred = [self.forward(X) for X in x]
+			loss = mse(y, y_pred)
+			print(f"Loss at epoch {e}: {loss}")
+			if optimizer:
+				if optimizer(loss):
+					print(f"Early Stopping applied, model has converged at epoch {e}")
+					break
+			
+			
+			
+	
 	'''
 	def get_loss(self, x, y, t0, t1):
 		total_loss = 0

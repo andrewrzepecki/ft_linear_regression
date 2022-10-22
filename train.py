@@ -3,6 +3,7 @@ import sys
 import argparse
 from src.Model import Model
 from src.Data import Dataset
+from src.Optimize import Optimizer
 
 
 def main():
@@ -15,11 +16,13 @@ def main():
 	
 	# Parse args here
 	verbose = True if args.verbose else False
-	model = Model()
+	model = Model(config='linear_regression_std.cfg')
+	optimizer = Optimizer(model)
 	data = Dataset(args.data)
 
-	model.fit(data.X, data.Y)
-	print(model([180000]))
+	model.fit(data.X, data.Y, optimizer=optimizer)
+	print(model.lr)
+	print(model([50000]))
 
 
 if __name__ == '__main__':

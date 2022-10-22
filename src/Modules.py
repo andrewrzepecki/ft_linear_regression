@@ -62,14 +62,13 @@ class Standardize(Module):
 
 class Linear(Module):
 
-    def __init__(self, dim=1):
+    def __init__(self, dim : int =1):
         super().__init__()
         # a
         self.coefficients = np.zeros(dim)
         self.dim = len(self.coefficients)
         # b
         self.intercept = 0
-        self.lr = 0.05
 
     def forward(self, x):
         y = 0
@@ -77,7 +76,7 @@ class Linear(Module):
             y += A * X
         return y + self.intercept
 
-    def fit(self, x, y):
+    def fit(self, x, y, lr):
         
         if self.dim != len(x[0]):
             self.intercept = 0
@@ -93,9 +92,9 @@ class Linear(Module):
             for j in range(self.dim):
                 coefficients_gradient[j] += (self.forward(x[i]) - y[i]) * x[i][j]
         
-        self.intercept = self.intercept - intercept_gradient * (1/n) * self.lr
+        self.intercept = self.intercept - intercept_gradient * (1/n) * lr
         for i in range(self.dim):
-            self.coefficients[i] = self.coefficients[i] - coefficients_gradient[i] * (1/n) * self.lr
+            self.coefficients[i] = self.coefficients[i] - coefficients_gradient[i] * (1/n) * lr
             
 
 MODULE_MAP = {
