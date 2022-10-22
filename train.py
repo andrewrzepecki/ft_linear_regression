@@ -4,6 +4,7 @@ import argparse
 from src.Model import Model
 from src.Data import Dataset
 from src.Optimize import Optimizer
+from src.Visualize import show_hypothesis, show_data, show_derivative
 
 
 def main():
