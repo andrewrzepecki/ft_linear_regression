@@ -21,7 +21,7 @@ try:
 except Exception:
 	from src.Modules import Linear, Standardize, MODULE_MAP
 
-LINEAR_REGRESSION_CONFIG = "linear_regression.cfg"
+LINEAR_REGRESSION_CONFIG = "linear_regression_std.cfg"
 
 class Model():
 
@@ -87,7 +87,7 @@ class Model():
 			fd.close()
 	
 	
-	def fit(self, x, y, epochs=1000):
+	def fit(self, x, y, epochs=10000):
 		# Fit Data Preprocessing
 		self._modules[0].fit(x.T)
 		x = np.array([self._modules[0](X) for X in x])

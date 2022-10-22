@@ -15,6 +15,28 @@ class Module():
     def forward(self, x):
         return x
 
+class Normalize(Module):
+
+    def __init__(self, dim : int = 1):
+        super().__init__()
+        self.min = np.ones(dim)
+        self.max = np.ones(dim)
+        self.dim = dim
+
+    def forward(self, x : list):
+        y = []
+        for X, MIN, MAX in zip(x, self.min, self.max):
+            y.append((X - MIN) / (MAX - MIN))
+        return y
+
+    def fit(self, x):
+        self.dim = len(x)
+        self.min = np.ones(self.dim)
+        self.max = np.ones(self.dim)
+        for i, X in enumerate(x):
+            self.min[i] = min(X)
+            self.max[i] = max(X)
+
 class Standardize(Module):
     
     def __init__(self, dim : int = 1):
@@ -47,15 +69,13 @@ class Linear(Module):
         self.dim = len(self.coefficients)
         # b
         self.intercept = 0
-        self.lr = 0.5
-
+        self.lr = 0.05
 
     def forward(self, x):
         y = 0
         for X, A in zip(x, self.coefficients):
-            y += A * X + self.intercept
-        return y
-
+            y += A * X
+        return y + self.intercept
 
     def fit(self, x, y):
         
@@ -74,11 +94,12 @@ class Linear(Module):
                 coefficients_gradient[j] += (self.forward(x[i]) - y[i]) * x[i][j]
         
         self.intercept = self.intercept - intercept_gradient * (1/n) * self.lr
-        for i in range(self.idm):
+        for i in range(self.dim):
             self.coefficients[i] = self.coefficients[i] - coefficients_gradient[i] * (1/n) * self.lr
             
 
 MODULE_MAP = {
     'Standardize' : Standardize,
-    'Linear' : Linear
+    'Linear' : Linear,
+    'Normalize' : Normalize
 }

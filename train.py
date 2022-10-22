@@ -19,7 +19,7 @@ def main():
 	data = Dataset(args.data)
 
 	model.fit(data.X, data.Y)
-	print(model([280000]))
+	print(model([180000]))
 
 
 if __name__ == '__main__':
