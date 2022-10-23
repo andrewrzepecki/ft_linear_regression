@@ -1,25 +1,11 @@
-
-
-#!/usr/bin/env python
-# -*-coding:utf-8 -*-
-'''
-@File    :   ft_linear_regression.py
-@Time    :   2022/10/22 13:30:50
-@Author  :   Andrew Rzepecki 
-@Version :   1.0
-@Contact :   rzepecki.andrew@gmail.com
-@License :   (C)Copyright 2022-2023, Andrew Rzepecki
-@Desc    :   None
-'''
-
 import os
 import json
 import pickle
 import numpy as np
 try:
-	from Modules import Linear, Standardize, MODULE_MAP
+	from Modules import Module, Linear, Standardize, MODULE_MAP
 except Exception:
-	from src.Modules import Linear, Standardize, MODULE_MAP
+	from src.Modules import Module, Linear, Standardize, MODULE_MAP
 try:
 	from Maths import mse
 except Exception:
@@ -28,11 +14,13 @@ except Exception:
 
 LINEAR_REGRESSION_CONFIG = "linear_regression_std.cfg"
 
-class Model():
+class Model(Module):
 	
-	def __init__(self, model_path : str = None, verbose : bool = False, 
-					config : str = LINEAR_REGRESSION_CONFIG, input_size : int = 1,
-					lr: float = 0.025):
+	def __init__(self, model_path : str = None, 
+					config : str = LINEAR_REGRESSION_CONFIG,
+					lr: float = 0.005):
+		
+		super().__init__()
 		self._modules = []
 		if model_path:
 			self.load_from_checkpoint(model_path)
@@ -53,13 +41,6 @@ class Model():
 		return x
 
 	
-	def __call__(self, x):
-		''' 
-			Call function to predict. Defaults x to 0 if no arguments given for value of Discremenant.
-		'''
-		return self.forward(x)
-
-	
 	def load_from_config(self, path : str, lr : float = 0.025):
 		if os.path.exists(path):
 			basename = os.path.basename(path)
@@ -70,6 +51,7 @@ class Model():
 			for module in modules:
 				self._modules.append(MODULE_MAP[module['key']](dim=module['dim']))
 			self.lr = lr
+			self.input_size = self._modules[0].dim
 		else:
 			print("Invalid filepath to model configuration.")
 
@@ -101,7 +83,6 @@ class Model():
 		print(self._modules[0].__dict__)
 
 		# Train trainable layers
-		last_loss = None
 		for e in range(epochs):
 			for module in self._modules[1:]:
 				module.fit(x, y, self.lr)
