@@ -23,7 +23,6 @@ def train_model(config : str = "", data : str = "",
 				epochs : int = 10000, lr : float = 0.025, 
 				input_size : int = 1, optimizer : bool = False):
 
-	data = Dataset(data)
 	model = Model(config=config, lr=lr)
 	if optimizer:
 		optimizer = Optimizer(model)
@@ -61,6 +60,7 @@ def user_prompt():
 	lr = 0.025
 	optimizer = False
 	model = None
+	data = Dataset("data.csv")
 	while True:
 		print(f"Hyperparameters: Epochs {epochs} | Learning Rate {lr} | Optimizer {'On' if optimizer else 'Off'}")
 		print("1. Simple Linear Regression")
@@ -76,7 +76,7 @@ def user_prompt():
 		print("11. Exit & Save last model Trained")
 		u = input('Select Choice (1-11): ')
 		if u in ['1', '2', '3', '4']:
-			data = "data.csv"
+			data = Dataset("data.csv")
 			if u == '1':
 				config = "linear_regression.cfg"
 			elif u == '2':
@@ -85,7 +85,7 @@ def user_prompt():
 				config = "linear_regression_std.cfg"
 			else:
 				config = "linear_regression_multi_std.cfg"
-				data = "data2.csv"
+				data = Dataset("data.csv")
 			model = train_model(config=config, epochs=epochs, lr=lr, data=data, optimizer=optimizer) 
 			input()
 		if u == '5':
