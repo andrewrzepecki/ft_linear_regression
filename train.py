@@ -5,7 +5,7 @@ import argparse
 from src.Model import Model
 from src.Data import Dataset
 from src.Optimize import Optimizer
-from src.Visualize import show_hypothesis, show_data, show_derivative
+from src.Visualize import show_hypothesis, show_data
 
 def parse_args():
 	parser = argparse.ArgumentParser()
@@ -21,15 +21,15 @@ def parse_args():
 
 def train_model(config : str = "", data : str = "", 
 				epochs : int = 10000, lr : float = 0.025, 
-				input_size : int = 1, optimizer : bool = False):
+				optimizer : bool = False):
 
-	model = Model(config=config, lr=lr)
+	model = Model(config=config)
 	if optimizer:
 		optimizer = Optimizer(model)
 	else:
 		optimizer = None
-
-	model.fit(data.X, data.Y, optimizer=optimizer, epochs=epochs)
+	model.fit(data.X, data.Y, optimizer=optimizer, lr=lr, epochs=epochs)
+	
 	return model
 
 def change_lr():
@@ -61,8 +61,12 @@ def user_prompt():
 	optimizer = False
 	model = None
 	data = Dataset("data.csv")
+	end = '\033[0m'
+	on = '\033[92mOn' + end
+	off = '\033[91mOff' + end
+	bold = '\033[1m'
 	while True:
-		print(f"Hyperparameters: Epochs {epochs} | Learning Rate {lr} | Optimizer {'On' if optimizer else 'Off'}")
+		print(f"{bold}Hyperparameters:{end} Epochs {bold}{epochs}{end} | Learning Rate {bold}{lr}{end} | Optimizer {on if optimizer else off}")
 		print("1. Simple Linear Regression")
 		print("2. Simple Linear Regression with Normalization")
 		print("3. Simple Linear Regression with Standardization")
@@ -72,9 +76,8 @@ def user_prompt():
 		print("7. Activate/Deactivate Optimizer (Early Stopping & Dynamic Learning Rate)")
 		print("8. Visualize Data")
 		print("9. Visualize Hypothesis")
-		print("10. Visualize Derivative")
-		print("11. Exit & Save last model Trained")
-		u = input('Select Choice (1-11): ')
+		print("10. Exit & Save last model Trained")
+		u = input('Select Choice (1-10): ')
 		if u in ['1', '2', '3', '4']:
 			data = Dataset("data.csv")
 			if u == '1':
@@ -85,7 +88,7 @@ def user_prompt():
 				config = "linear_regression_std.cfg"
 			else:
 				config = "linear_regression_multi_std.cfg"
-				data = Dataset("data.csv")
+				data = Dataset("data2.csv")
 			model = train_model(config=config, epochs=epochs, lr=lr, data=data, optimizer=optimizer) 
 			input()
 		if u == '5':
@@ -99,9 +102,8 @@ def user_prompt():
 		if u == '9':
 			show_hypothesis(model, data)
 		if u == '10':
-			show_derivative(model, data)
-		if u == '11':
 			if model:
+				print(f"Saving model at {model._name_}.ml")
 				model.save()
 			break
 		os.system('cls' if os.name == 'nt' else 'clear')

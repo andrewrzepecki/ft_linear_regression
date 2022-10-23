@@ -6,7 +6,9 @@ except Exception:
 
 class Module():
 
-    def __init__(self):
+    def __init__(self, dim : int = 1, trainable : bool = True):
+        self.trainable = trainable
+        self.dim = dim
         pass
     
     def __call__(self, x):
@@ -17,11 +19,12 @@ class Module():
 
 class Normalize(Module):
 
-    def __init__(self, dim : int = 1):
+    def __init__(self, dim : int = 1, trainable : bool = False):
         super().__init__()
         self.min = np.ones(dim)
         self.max = np.ones(dim)
         self.dim = dim
+        self.trainable = trainable
 
     def forward(self, x : list):
         y = []
@@ -39,11 +42,12 @@ class Normalize(Module):
 
 class Standardize(Module):
     
-    def __init__(self, dim : int = 1):
+    def __init__(self, dim : int = 1, trainable : bool = False):
         super().__init__()
         self.means = np.ones(dim)
         self.stds = np.ones(dim)
         self.dim = dim
+        self.trainable = trainable
 
     def forward(self, x : list):
         y = []
@@ -62,13 +66,14 @@ class Standardize(Module):
 
 class Linear(Module):
 
-    def __init__(self, dim : int =1):
+    def __init__(self, dim : int = 1, trainable : bool = True):
         super().__init__()
         # a
         self.coefficients = np.zeros(dim)
         self.dim = len(self.coefficients)
         # b
         self.intercept = 0
+        self.trainable = trainable
 
     def forward(self, x):
         y = 0
