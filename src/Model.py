@@ -12,7 +12,7 @@ except Exception:
 	from src.Maths import mse
 
 
-LINEAR_REGRESSION_CONFIG = "linear_regression_std.cfg"
+LINEAR_REGRESSION_CONFIG = "config/linear_regression_std.cfg"
 
 class Model(Module):
 	
@@ -22,11 +22,11 @@ class Model(Module):
 		super().__init__()
 		self._modules = []
 		if model_path:
-			self.load_from_checkpoint(model_path)
+			self.load(model_path)
 		if self._modules != []:
 			print(f'Model loaded from {model_path}')
 		elif self.load_from_config(config):
-			print("Loading Untrained Model\n - Train model with model.train([labelled_data])\n - Or specify a model checkpoint")
+			print("Loading Untrained Model\n - Train model with model.fit()\n - Or specify a model checkpoint")
 			print("Initialed weights to zero ...")
 		else:
 			return None
@@ -61,7 +61,7 @@ class Model(Module):
 			return False
 
 	
-	def load_from_checkpoint(self, path : str):
+	def load(self, path : str):
 		if os.path.exists(path):
 			try:
 				with open(path, 'rb') as fd:
@@ -81,7 +81,7 @@ class Model(Module):
 			pickle.dump(self, fd)
 			fd.close()
 	
-	
+
 	def fit(self, x, y, epochs : int = 10000, lr : int = 0.025, optimizer = None):
 		
 		# Fit Data Preprocessing
@@ -91,6 +91,7 @@ class Model(Module):
 			if not module.trainable:
 				module.fit(x.T)
 				x = np.array([module(X) for X in x])
+		
 		# Train trainable layers
 		for e in range(epochs):
 			for module in self._modules:
@@ -104,3 +105,8 @@ class Model(Module):
 				if optimizer(loss):
 					print(f"Early Stopping applied, model has converged at epoch {e}")
 					break
+				
+
+	def get_loss(self, x, y):
+		preds = [self.forward(X) for X in x]
+		return mse(y, preds)

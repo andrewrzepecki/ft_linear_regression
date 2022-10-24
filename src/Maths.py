@@ -1,10 +1,17 @@
-import numpy as np
+import math
 
 def mean(data):
-    return np.mean(data)
+    return sum(data) / len(data)
 
 def std(data):
-    return np.std(data)
+    xm = mean(data)
+    std = 0
+    for x in data:
+        std += (x - xm)**2
+
+    std = std / len(data)
+    std = math.sqrt(std)
+    return std
 
 def mse(y, y_pred):
     total = 0
