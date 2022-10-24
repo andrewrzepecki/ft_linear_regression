@@ -1,7 +1,7 @@
 import os
 import sys
 import argparse
-from ft_linear_regression import ft_linear_regression
+from src.Model import Model
 
 
 def prompt_user(model):
@@ -10,19 +10,24 @@ def prompt_user(model):
 		x = input('''Enter car's mileage:\n''')
 		if x.lower() == "end":
 			break
-		x = int(eval(x))
-		if x < 0:
-			print("Mileage can't be negative!")
-		else:
-			print(f"Predicted car value based on mileage: {model(x)}")
+		elif model.input_size == 1:
+			x = int(eval(x))
+			if x < 0:
+				print("A car can't have negative mileage!")
+			print(f"Predicted car value based on mileage: {model([x])}")
+		elif ' ' in x:
+			x = x.split(' ')
+			if len(x) == model.input_size:
+				x = [int(eval(X)) for X in x]
+				print(f"Predicted car value based on mileage: {model(x)}")
 
 def main():
 	parser = argparse.ArgumentParser()
-	parser.add_argument("-w", "--weights", help="Show verbose")
+	parser.add_argument("-m", "--model", help="Show verbose", default=None)
 	args = parser.parse_args()
 	
 	# Parse args here
-	model = ft_linear_regression(model_path=args.weights)
+	model = Model(model_path=args.model)
 	prompt_user(model)
 
 if __name__ == '__main__':

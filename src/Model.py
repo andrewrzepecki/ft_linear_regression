@@ -68,6 +68,7 @@ class Model(Module):
 					data = pickle.load(fd)
 					self._modules = data._modules
 					self._name_ = data._name_
+					self.input_size = data.input_size
 					fd.close()
 			except Exception as e:
 				print("Invalid file format.")
@@ -84,20 +85,19 @@ class Model(Module):
 	def fit(self, x, y, epochs : int = 10000, lr : int = 0.025, optimizer = None):
 		
 		# Fit Data Preprocessing
+		raw = np.array([X for X in x])
 		self.lr = lr
 		for module in self._modules:
 			if not module.trainable:
 				module.fit(x.T)
 				x = np.array([module(X) for X in x])
-
 		# Train trainable layers
 		for e in range(epochs):
-			
 			for module in self._modules:
 				if module.trainable:
 					module.fit(x, y, self.lr)
 			
-			y_pred = [self.forward(X) for X in x]
+			y_pred = [self.forward(X) for X in raw]
 			loss = mse(y, y_pred)
 			print(f"Loss at epoch {e}: {loss}")
 			if optimizer:

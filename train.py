@@ -38,7 +38,7 @@ def change_lr():
 		os.system('cls' if os.name == 'nt' else 'clear')
 		x = input('Enter Learning Rate (0.0 - 1.0): ')
 		try:
-			if float(x) > 0.0 and float(x) < 1.0:
+			if float(x) > 0.0 and float(x) < 10.0:
 				return float(x)
 		except Exception:
 			print("Invalid input, please enter a valid float between 0 and 1")
